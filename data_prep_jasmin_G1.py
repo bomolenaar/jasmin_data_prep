@@ -3,31 +3,30 @@
 
 import re, sys, os
 import os.path
-import string_norm.text_filter as text_filter
 
 if (len(sys.argv) < 3):
     print("You must add two arguments: a folder name for generating the files and the root path to this project folder.")
     sys.exit(-1)
 
-subset = sys.argv[1]
-# TODO: this should run with subset = 2 instead of 1 for consistency
-myfolder = sys.argv[2]
+subset1 = sys.argv[1]
+subset2 = sys.argv[2]
+myfolder = sys.argv[3]
 ## DIRECTORIES all of them ending with / ##
 # output data dir, e.g.; "/vol/tensusers3/nvhelleman/jasmin/data/"
-filedir = myfolder+subset+"data/"
+filedir = myfolder+subset2+"data/"
 # tier dir, e.g.; "/vol/tensusers3/nvhelleman/jasmin/20220210/tier/"
 # original_prev = os.path.join(myfolder, subset, 'tier')
-original = myfolder + subset + 'manual_transcriptions/'
+original = myfolder + subset2 + 'manual_transcriptions/'
 original_filtered = original[:-1] + '_filtered/'
-G1_prompts = myfolder + 'jasmin_qG1-1/' + 'prompts/'
-G1_ort = myfolder + 'jasmin_qG1-1/' + 'manual_transcriptions/'
+G1_ort = myfolder + subset2 + 'manual_transcriptions/'
+G1_prompts = myfolder + subset1 + 'prompts/'
 # os.system('./encoding.sh '+original_prev+ ' '+original)
 # wav (test) files to use dir, e.g.; "/vol/tensusers3/nvhelleman/jasmin/20220210/wav_files_to_use/"
-# test_set = os.path.join(myfolder, 'jasmin_qG1-1', 'wav_files_to_use_test/')
+# test_set = os.path.join(myfolder, 'subset', 'wav_files_to_use_test/')
 # wav (train)
-train_set = os.path.join(myfolder, subset, 'wav_files_to_use_train/')
+train_set = os.path.join(myfolder, subset2, 'wav_files_to_use_train/')
 # rec to use file
-rec = os.path.join(myfolder, 'jasmin_qG1-1', 'rec_to_use.txt')
+rec = os.path.join(myfolder, subset1, 'rec_to_use.txt')
 
 # os.system(f'mkdir -p {train_set}')
 # os.system(f'mkdir -p {test_set}')
@@ -45,23 +44,16 @@ def text(filenames):
     results = []
     for name in filenames:
         basename = name.split('.')[0]
-        file = open(original + basename + '.ort')  # take non-normalised
+        file = original + basename + '.ort'
+        clean_transcript = ""
+        results.append("{} {}".format(basename, clean_transcript))
         transcript = ""
         clean_transcript = ""
-        for line in file:
-            transcript += line.strip("\n") + ' '
-            if "." in line:
-                for word in transcript.split(' '):
-                    clean_word = text_filter.remove_accents_from_lower(text_filter.clean_word(word))
-                    clean_transcript += clean_word + ' '
-                results.append("{} {}".format(basename, clean_transcript))
-                transcript = ""
-                clean_transcript = ""
     return '\n'.join(sorted(results))
 
 
 ## TRAIN / TEST SET ##
-TRAIN_PATH = 'train_jasmin/'
+TRAIN_PATH = 'train/'
 # TEST_PATH = 'test_jasmin/'
 train = []
 # test = []

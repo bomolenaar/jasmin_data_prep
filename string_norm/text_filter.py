@@ -6,7 +6,7 @@ import os, sys
 from re import sub
 
 # Perl file which converts digits into their orthographical transcription.
-DIGITS_TO_WORDS_FILE_PATH = '/vol/tensusers4/bmolenaar/data_prep_jasmin/string_norm/map_digits_to_words_v2.perl'
+DIGITS_TO_WORDS_FILE_PATH = '/vol/tensusers4/bmolenaar/jasmin_data_prep/string_norm/map_digits_to_words_v2.perl'
 
 if (len(sys.argv) < 3):
     print("You must add two arguments: input file and output file paths")
@@ -55,7 +55,7 @@ def clean_word(m_word):
     else:
         for character in m_word:
             if character.isdigit():
-                print(m_word)
+                # print(m_word)
                 m_word = m_word[:m_word.index(character)]+map_digits(character)
     return m_word.lower()
     
