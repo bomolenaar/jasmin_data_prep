@@ -46,6 +46,8 @@ def text(filenames):
         basename = name.split('.')[0]
         file = original + basename + '.ort'
         clean_transcript = ""
+        # TODO: clean transcript with text_filter.py
+
         results.append("{} {}".format(basename, clean_transcript))
         transcript = ""
         clean_transcript = ""

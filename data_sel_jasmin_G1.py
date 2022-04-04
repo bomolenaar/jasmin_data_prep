@@ -81,17 +81,16 @@ def split_save_stories(textgrid_list, wav_folder, wav_folder_train, wav_folder_t
                             xmax = float(re.findall("\d+\.?\d*", file[line+1])[0])
                             if (xmin >= xmin_prompt) and (xmax <= xmax_prompt):
                                 word = re.findall('"([^"]*)"', file[line+2])[0]
-                                if word != "":
-                                    transcript.append([word, xmin, xmax])
-                                    if xmax == xmax_prompt:
-                                        for word, xmin, xmax in transcript:
+                                transcript.append([word, xmin, xmax])
+                                if xmax == xmax_prompt:
+                                    for word, xmin, xmax in transcript:
+                                        if word != "":
                                             transcript_text += word + ' '
-
-                                        with open(f"{ort_folder}{basename}_1_{str(number).zfill(3)}.ort", 'w', encoding='utf-8') as transcript_file:
-                                            transcript_file.write(transcript_text)
-                                        transcript = []
-                                        transcript_text = ""
-                                        number += 1
+                                    with open(f"{ort_folder}{basename}_1_{str(number).zfill(3)}.ort", 'w', encoding='utf-8') as transcript_file:
+                                        transcript_file.write(transcript_text)
+                                    transcript = []
+                                    transcript_text = ""
+                                    number += 1
 
         # iterate over manual transcriptions again but this time post prompts
         number = 1
@@ -119,8 +118,8 @@ def split_save_stories(textgrid_list, wav_folder, wav_folder_train, wav_folder_t
         # move untrimmed files
         os.system(f"mv {wav_folder}{basename}.wav {wav_folder_untrimmed}{basename}.wav")
 
-        # remove empty wav folder
-        shutil.rmtree(wav_folder)
+    # remove empty wav folder
+    shutil.rmtree(wav_folder)
 
 
 # generate selected recordings, change the if statement accordingly
