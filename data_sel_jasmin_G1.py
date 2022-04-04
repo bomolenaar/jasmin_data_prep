@@ -102,7 +102,7 @@ def split_save_stories(textgrid_list, wav_folder, wav_folder_train, wav_folder_t
                     word = re.findall('"([^"]*)"', file[line+2])[0]
                     if word != "":
                         transcript.append([word, xmin, xmax])
-                        if '.' in word:
+                        if ('.' in word) or ('?' in word):
                             for word, xmin, xmax in transcript:
                                 transcript_text += word + ' '
 
