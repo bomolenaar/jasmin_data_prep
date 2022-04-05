@@ -42,7 +42,8 @@ if os.path.exists(path_to_second_folder):
 path_to_second_folder.mkdir()
 
 def split_save_stories(textgrid_list, wav_folder, wav_folder_train, wav_folder_test, wav_folder_untrimmed, ort_folder, second_ort_folder, prompt_folder):
-    'wtf did i do here again?'
+    """takes JASMIN comp-q G1 files and segments them into 1st and 2nd story;
+    1st includes prompts, 2nd does not"""
 
     for name in textgrid_list:
         file = open(name, 'r', encoding='utf8').readlines()
@@ -68,7 +69,11 @@ def split_save_stories(textgrid_list, wav_folder, wav_folder_train, wav_folder_t
                 if prompt != "":
                     xmin_prompt = float(re.findall("\d+\.?\d*", file[line-2])[0])
                     xmax_prompt = float(re.findall("\d+\.?\d*", file[line-1])[0])
-
+                    # print(basename, number)
+                    # print(xmin_prompt)
+                    # print(xmax_prompt)
+                    # print(prompt)
+                    # print()
                     os.system(f"sox {wav_folder}{basename}.wav {wav_folder_test}{basename}_1_{str(number).zfill(3)}.wav trim {xmin_prompt} ={xmax_prompt} pad 0.3 0.3")
 
                     with open(f"{prompt_folder}{basename}_1_{str(number).zfill(3)}.prompt", 'w', encoding='utf-8') as prompt_file:
@@ -103,13 +108,15 @@ def split_save_stories(textgrid_list, wav_folder, wav_folder_train, wav_folder_t
                     if word != "":
                         transcript.append([word, xmin, xmax])
                         if ('.' in word) or ('?' in word):
+                            start = transcript[0][1]
+                            end = transcript[-1][2]
                             for word, xmin, xmax in transcript:
                                 transcript_text += word + ' '
 
                             with open(f"{second_ort_folder}{basename}_2_{str(number).zfill(3)}.ort", 'w', encoding='utf-8') as transcript_file:
                                 transcript_file.write(transcript_text)
 
-                            os.system(f"sox {wav_folder}{basename}.wav {wav_folder_train}{basename}_2_{str(number).zfill(3)}.wav trim {xmin} ={xmax} pad 0.3 0.3")
+                            os.system(f"sox {wav_folder}{basename}.wav {wav_folder_train}{basename}_2_{str(number).zfill(3)}.wav trim {start} ={end} pad 0.3 0.3")
 
                             transcript = []
                             transcript_text = ""
