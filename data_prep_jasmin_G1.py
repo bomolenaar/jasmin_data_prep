@@ -14,13 +14,9 @@ myfolder = sys.argv[3]
 ## DIRECTORIES all of them ending with / ##
 # output data dir, e.g.; "/vol/tensusers3/nvhelleman/jasmin/data/"
 filedir = myfolder+subset2+"data/"
-# tier dir, e.g.; "/vol/tensusers3/nvhelleman/jasmin/20220210/tier/"
-# original_prev = os.path.join(myfolder, subset, 'tier')
 original = myfolder + subset2 + 'manual_transcriptions/'
-original_filtered = original[:-1] + '_filtered/'
-G1_ort = myfolder + subset2 + 'manual_transcriptions/'
+G1_ort = myfolder + subset1 + 'manual_transcriptions/'
 G1_prompts = myfolder + subset1 + 'prompts/'
-# os.system('./encoding.sh '+original_prev+ ' '+original)
 # wav (test) files to use dir, e.g.; "/vol/tensusers3/nvhelleman/jasmin/20220210/wav_files_to_use/"
 # test_set = os.path.join(myfolder, 'subset', 'wav_files_to_use_test/')
 # wav (train)
@@ -28,31 +24,10 @@ train_set = os.path.join(myfolder, subset2, 'wav_files_to_use_train/')
 # rec to use file
 rec = os.path.join(myfolder, subset1, 'rec_to_use.txt')
 
-# os.system(f'mkdir -p {train_set}')
-# os.system(f'mkdir -p {test_set}')
-# os.system(f'mkdir -p {filedir}')
-# os.system(f'mkdir -p {filedir}/train_jasmin')
-# os.system('mkdir -p data/test_jasmin')
-
 # normalise manual transcriptions, prompts for G1-1 and G1-2
-# os.system(f'python3 string_norm.py {original} {original}')
+# os.system(f'python3 string_norm.py {G2_ort} {G2_ort}')
 # os.system(f'python3 string_norm.py {G1_prompts} {G1_prompts}')
 # os.system(f'python3 string_norm.py {G1_ort} {G1_ort}')
-
-## TEXT ##
-def text(filenames):
-    results = []
-    for name in filenames:
-        basename = name.split('.')[0]
-        file = original + basename + '.ort'
-        clean_transcript = ""
-        # TODO: clean transcript with text_filter.py
-
-        results.append("{} {}".format(basename, clean_transcript))
-        transcript = ""
-        clean_transcript = ""
-    return '\n'.join(sorted(results))
-
 
 ## TRAIN / TEST SET ##
 TRAIN_PATH = 'train/'
@@ -63,6 +38,25 @@ for name in os.listdir(train_set):
     train.append(name)  # => train set
 # for name in os.listdir(test_set):
 #     test.append(name)   # => test set
+
+os.system(f'mkdir -p {filedir}')
+os.system(f'mkdir -p {filedir}/train')
+
+
+## TEXT ##
+def text(filenames):
+    results = []
+    transcript = ""
+    for name in filenames:
+        basename = name.split('.')[0]
+        file = original + basename + '.ort'
+        text = [line for line in open(file, 'r', encoding='utf-8').readlines()]
+        for line in text:
+            transcript += line.strip('\n')
+        results.append("{} {}".format(basename, transcript))
+        transcript = ""
+    return '\n'.join(sorted(results))
+
 
 with open(filedir+TRAIN_PATH+'text', 'w', encoding='utf-8') as train_text: #, open(filedir+TEST_PATH+'text', 'w', encoding='utf-8') as test_text:
     train_text.write(text(train)+ '\n')
