@@ -100,7 +100,7 @@ def spk2utt():
 
 spk2utt()
 
-with open(filedir+TRAIN_PATH+'utt2spk', 'w') as train_text: #, open(filedir+TEST_PATH+'utt2spk', 'w') as test_text:
+with open(filedir+TRAIN_PATH+'utt2spk', 'a') as train_text: #, open(filedir+TEST_PATH+'utt2spk', 'a') as test_text:
     train_text.write('\n')
     # test_text.write('\n')
 
