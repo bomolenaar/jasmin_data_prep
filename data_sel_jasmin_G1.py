@@ -32,9 +32,9 @@ second_ort_folder = os.path.join(second_folder, 'manual_transcriptions/')
 
 # remove old main_folder and second_folder and create new ones
 path_to_main_folder = Path(main_folder)
-if os.path.exists(path_to_main_folder):
-    shutil.rmtree(path_to_main_folder)
-path_to_main_folder.mkdir()
+# if os.path.exists(path_to_main_folder):
+#     shutil.rmtree(path_to_main_folder)
+# path_to_main_folder.mkdir()
 
 path_to_second_folder = Path(second_folder)
 if os.path.exists(path_to_second_folder):
@@ -105,22 +105,25 @@ def split_save_stories(textgrid_list, wav_folder, wav_folder_train, wav_folder_t
                 if xmin > xmax_prompt:
                     xmax = float(re.findall("\d+\.?\d*", file[line+1])[0])
                     word = re.findall('"([^"]*)"', file[line+2])[0]
-                    if word != "":
+                    if (word != "") and (word != 'ggg.') and (word != 'xxx'):
                         transcript.append([word, xmin, xmax])
                         if ('.' in word) or ('?' in word):
-                            start = transcript[0][1]
-                            end = transcript[-1][2]
-                            for word, xmin, xmax in transcript:
-                                transcript_text += word + ' '
+                            if '...' in word:
+                                continue
+                            else:
+                                start = transcript[0][1]
+                                end = transcript[-1][2]
+                                for word, xmin, xmax in transcript:
+                                    transcript_text += word + ' '
 
-                            with open(f"{second_ort_folder}{basename}_2_{str(number).zfill(3)}.ort", 'w', encoding='utf-8') as transcript_file:
-                                transcript_file.write(transcript_text)
+                                with open(f"{second_ort_folder}{basename}_2_{str(number).zfill(3)}.ort", 'w', encoding='utf-8') as transcript_file:
+                                    transcript_file.write(transcript_text)
 
-                            os.system(f"sox {wav_folder}{basename}.wav {wav_folder_train}{basename}_2_{str(number).zfill(3)}.wav trim {start} ={end} pad 0.3 0.3")
+                                os.system(f"sox {wav_folder}{basename}.wav {wav_folder_train}{basename}_2_{str(number).zfill(3)}.wav trim {start} ={end} pad 0.3 0.3")
 
-                            transcript = []
-                            transcript_text = ""
-                            number += 1
+                                transcript = []
+                                transcript_text = ""
+                                number += 1
 
         # move untrimmed files
         os.system(f"mv {wav_folder}{basename}.wav {wav_folder_untrimmed}{basename}.wav")
@@ -137,7 +140,7 @@ with open(recordings,'r', encoding='utf-8') as f_in, open(selected_recordings,'w
             f_out.write(line)
 
 # create folders if not exist, remove folders if exist
-folder_lst = [prompt_folder, second_ort_folder, ort_folder, wav_folder, wav_folder_train, wav_folder_test, wav_folder_untrimmed]
+folder_lst = [prompt_folder, ort_folder, wav_folder_test, wav_folder, wav_folder_untrimmed, second_ort_folder, wav_folder_train]
 for folder in folder_lst:
     if os.path.isdir(folder):
         filelist = [f for f in os.listdir(folder)]
