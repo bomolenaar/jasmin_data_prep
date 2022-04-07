@@ -105,7 +105,7 @@ def split_save_stories(textgrid_list, wav_folder, wav_folder_train, wav_folder_t
                 if xmin > xmax_prompt:
                     xmax = float(re.findall("\d+\.?\d*", file[line+1])[0])
                     word = re.findall('"([^"]*)"', file[line+2])[0]
-                    if (word != "") and (word != 'ggg.') and (word != 'xxx'):
+                    if (word != "") and (word != 'ggg.') and (word != '!ggg.') and (word != 'xxx.'):
                         transcript.append([word, xmin, xmax])
                         if ('.' in word) or ('?' in word):
                             if '...' in word:
@@ -140,7 +140,8 @@ with open(recordings,'r', encoding='utf-8') as f_in, open(selected_recordings,'w
             f_out.write(line)
 
 # create folders if not exist, remove folders if exist
-folder_lst = [prompt_folder, ort_folder, wav_folder_test, wav_folder, wav_folder_untrimmed, second_ort_folder, wav_folder_train]
+folder_lst = [prompt_folder, ort_folder, wav_folder_test,
+              wav_folder, wav_folder_untrimmed, second_ort_folder, wav_folder_train]
 for folder in folder_lst:
     if os.path.isdir(folder):
         filelist = [f for f in os.listdir(folder)]
