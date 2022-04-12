@@ -12,7 +12,7 @@ subset = sys.argv[1]
 myfolder = sys.argv[2]
 ## DIRECTORIES all of them ending with / ##
 # output data dir, e.g.; "/vol/tensusers3/nvhelleman/jasmin/data/"
-filedir = myfolder+"/data/"
+filedir = myfolder+subset+"/data/"
 # tier dir, e.g.; "/vol/tensusers3/nvhelleman/jasmin/20220210/tier/"
 original_prev = os.path.join(myfolder, subset, 'tier')
 original = original_prev+'_utf8/'
@@ -36,7 +36,6 @@ for name in os.listdir(train_set):
 # for name in os.listdir(test_set):
 #     test.append(name)   # => test set
 
-
 ## TEXT ##
 def text(filenames):
     results = []
@@ -47,9 +46,14 @@ def text(filenames):
         number = 1
         for line in file:
             if "text =" in line:
-                if re.findall('"([^"]*)"', line)[0] != "":
-                    transcript += " "+ re.findall('"([^"]*)"', line)[0]
-                    if "." in line:
+                word = re.findall('"([^"]*)"', line)[0]
+                if word != "":
+                    if ("ggg." in line) or ("xxx." in line):
+                        continue
+                    if "..." in word:
+                        continue
+                    transcript += word + " "
+                    if ("." in transcript) or ("?" in transcript):
                         results.append("{} {}".format(basename+"_"+str(number).zfill(3), transcript))
                         number += 1
                         transcript = ""
@@ -70,7 +74,7 @@ def utt2spk(filenames):
         for line in file:
             if "text =" in line:
                 if "." in line:
-                    results.append("{} {}".format(basename+"_"+str(number).zfill(4), basename))
+                    results.append("{} {}".format(basename+"_"+str(number).zfill(3), basename))
                     number += 1
     return '\n'.join(sorted(results))
 
@@ -121,7 +125,7 @@ def segments(filenames):
             end = line.split('= ')[1].replace('\n', '')
           if "text =" in line:
             if "." in line:
-              results.append("{} {} {} {}".format(basename+"_"+str(number).zfill(4), basename, begin, end))
+              results.append("{} {} {} {}".format(basename+"_"+str(number).zfill(3), basename, begin, end))
               number += 1
               start = True     
     return '\n'.join(sorted(results))

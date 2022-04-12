@@ -25,7 +25,7 @@ if os.path.exists('utils'):
     # os.system('mkdir -p data/test')
 
     os.system(
-        '/usr/bin/praat --run step1_tg_to_std_format.praat "' + subset + '/ort_files_to_use" "' + subset + '/praat_files_to_use" ' + file_input_ext + ' ' + file_output_ext + ' > _step1.txt')
+        '/usr/bin/praat --run step1_tg_to_std_format.praat "' + subset + '/awd_files_to_use" "' + subset + '/praat_files_to_use" ' + file_input_ext + ' ' + file_output_ext + ' > _step1.txt')
     # TODO: change the parameters accordingly
     os.system(
         '/usr/bin/praat --run step2_extract_tier.praat "' + subset + '/praat_files_to_use" "' + subset + '/tier" > _step2.txt')
