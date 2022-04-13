@@ -20,10 +20,15 @@ myfolder = os.path.join(sys.argv[2], date)
 jasmin_folder = '/vol/bigdata/corpora/JASMIN/'
 recordings = '/vol/bigdata/corpora/JASMIN/CDdoc/data/meta/text/nl/recordings.txt'
 selected_recordings = os.path.join(myfolder, 'rec_to_use.txt')
-wav_folder = os.path.join(myfolder, 'wav_files_to_use_train')
-ort_folder = os.path.join(myfolder, 'ort_files_to_use')
-hmi_folder = os.path.join(myfolder, 'hmi_files_to_use')
+wav_folder = os.path.join(myfolder, 'wav_files_to_use')
+# ort_folder = os.path.join(myfolder, 'ort_files_to_use')
+# hmi_folder = os.path.join(myfolder, 'hmi_files_to_use')
 awd_folder = os.path.join(myfolder, 'awd_files_to_use')
+trans_folder = os.path.join(myfolder, 'manual_transcriptions')
+train_folder = os.path.join(myfolder, 'wav_files_to_use_train')
+praat_folder = os.path.join(myfolder, 'praat_files_to_use')
+tier_folder = os.path.join(myfolder, 'tier')
+wav_untrimmed_folder = os.path.join(myfolder, '.wav_files_untrimmed/')
 
 # remove my old folder
 shutil.rmtree(myfolder, ignore_errors=True)
@@ -31,10 +36,6 @@ shutil.rmtree(myfolder, ignore_errors=True)
 # create myfolder
 path_to_myfolder = Path(myfolder)
 path_to_myfolder.mkdir()
-praat_folder = os.path.join(myfolder,'praat_files_to_use')
-tier_folder = os.path.join(myfolder,'tier')
-os.mkdir(praat_folder)
-os.mkdir(tier_folder)
 
 # generate selected recordings, change the if statement accordingly
 with open(recordings,'r', encoding='utf-8') as f_in, open(selected_recordings,'w', encoding='utf-8') as f_out:
@@ -45,7 +46,7 @@ with open(recordings,'r', encoding='utf-8') as f_in, open(selected_recordings,'w
                 f_out.write(line)
 
 # create folders if not exist, remove folders if exist
-myfolder_lst = [wav_folder, ort_folder, hmi_folder, awd_folder]
+myfolder_lst = [wav_folder, awd_folder, trans_folder, train_folder, praat_folder, tier_folder, wav_untrimmed_folder]
 for folder in myfolder_lst:
     if os.path.isdir(folder):
         filelist = [f for f in os.listdir(folder)]
@@ -64,8 +65,8 @@ with open(selected_recordings, 'r', encoding='utf-8') as f:
         name_lst.append(line.split()[0])
 
 wav_file_lst = []
-ort_file_lst = []
-hmi_file_lst = []
+# ort_file_lst = []
+# hmi_file_lst = []
 awd_file_lst = []
 # Cristian: this is not optimized at all... but it works :)
 for i in name_lst:
@@ -74,10 +75,10 @@ for i in name_lst:
             if i in filename:
                 if filename.endswith('.wav'):
                     wav_file_lst.append(os.path.join(dirpath, filename))
-                if filename.endswith('.ort'):
-                    ort_file_lst.append(os.path.join(dirpath, filename))
-                if filename.endswith('.hmi'):
-                    hmi_file_lst.append(os.path.join(dirpath, filename))
+                # if filename.endswith('.ort'):
+                #     ort_file_lst.append(os.path.join(dirpath, filename))
+                # if filename.endswith('.hmi'):
+                #     hmi_file_lst.append(os.path.join(dirpath, filename))
                 if filename.endswith('.awd'):
                     awd_file_lst.append(os.path.join(dirpath, filename))
 
@@ -86,15 +87,15 @@ for j in wav_file_lst:
     #print(j)
     shutil.copy(j, wav_folder)
 
-print('ort_file_lst',len(ort_file_lst))
-for m in ort_file_lst:
-    #print(m)
-    shutil.copy(m, ort_folder)
+# print('ort_file_lst',len(ort_file_lst))
+# for m in ort_file_lst:
+#     #print(m)
+#     shutil.copy(m, ort_folder)
 
-print('hmi_file_lst',len(hmi_file_lst))
-for n in hmi_file_lst:
-    #print(n)
-    shutil.copy(n, hmi_folder)
+# print('hmi_file_lst',len(hmi_file_lst))
+# for n in hmi_file_lst:
+#     #print(n)
+#     shutil.copy(n, hmi_folder)
 
 print('awd_file_lst',len(awd_file_lst))
 for q in awd_file_lst:
