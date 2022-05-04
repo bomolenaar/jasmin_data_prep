@@ -44,13 +44,17 @@ path_to_second_folder.mkdir()
 def split_save_stories(textgrid_list, wav_folder, wav_folder_train, wav_folder_test, wav_folder_untrimmed, ort_folder, second_ort_folder, prompt_folder):
     """takes JASMIN comp-q G1 files and segments them into 1st and 2nd story;
     1st includes prompts, 2nd does not"""
-
+    delta_skipped = 0
     for name in textgrid_list:
         file = open(name, 'r', encoding='utf8').readlines()
         basename = name.split('.')[0].split('/')[-1]
         number = 1
         transcript = []
         transcript_text = ""
+
+        ignore_words = {'',
+                        'ggg', 'ggg.', '!ggg.', 'xxx', 'xxx.', '!xxx',
+                        'uh', 'uh.', 'uh..', 'uhm', 'uhm.', 'uhm..'}
 
         for line in range(len(file)):
             if 'item [1]' in file[line]:
@@ -69,11 +73,7 @@ def split_save_stories(textgrid_list, wav_folder, wav_folder_train, wav_folder_t
                 if prompt != "":
                     xmin_prompt = float(re.findall("\d+\.?\d*", file[line-2])[0])
                     xmax_prompt = float(re.findall("\d+\.?\d*", file[line-1])[0])
-                    # print(basename, number)
-                    # print(xmin_prompt)
-                    # print(xmax_prompt)
-                    # print(prompt)
-                    # print()
+
                     os.system(f"sox {wav_folder}{basename}.wav {wav_folder_test}{basename}_1_{str(number).zfill(3)}.wav trim {xmin_prompt} ={xmax_prompt} pad 0.3 0.3")
 
                     with open(f"{prompt_folder}{basename}_1_{str(number).zfill(3)}.prompt", 'w', encoding='utf-8') as prompt_file:
@@ -105,12 +105,16 @@ def split_save_stories(textgrid_list, wav_folder, wav_folder_train, wav_folder_t
                 if xmin > xmax_prompt:
                     xmax = float(re.findall("\d+\.?\d*", file[line+1])[0])
                     word = re.findall('"([^"]*)"', file[line+2])[0]
-                    if (word != "") and (word != 'ggg.') and (word != '!ggg.') and (word != 'xxx.'):
+                    if word not in ignore_words:
                         transcript.append([word, xmin, xmax])
-                        if ('.' in word) or ('?' in word):
-                            # if '...' in word:
-                            #     continue
-                            # else:
+                        if ('...' in word) and (len(transcript) >= 2):
+                            delta = float(transcript[-1][1]) - float(transcript[-2][2])
+                            if delta <= 0.5:
+                                delta_skipped += 1
+                                continue
+                        # elif '...' in word:
+                        #     continue
+                        elif ('.' in word) or ('?' in word):
                             start = transcript[0][1]
                             end = transcript[-1][2]
                             for word, xmin, xmax in transcript:
@@ -130,6 +134,8 @@ def split_save_stories(textgrid_list, wav_folder, wav_folder_train, wav_folder_t
 
     # remove empty wav folder
     shutil.rmtree(wav_folder)
+
+    # print(f"'...' deltas skipped: {delta_skipped}")
 
 
 # generate selected recordings, change the if statement accordingly
@@ -179,6 +185,6 @@ for j in wav_file_lst:
     # print(j)
     shutil.copy(j, wav_folder)
 
-print('textgrid_file_lst',len(tg_file_lst))
+print('textgrid_file_lst', len(tg_file_lst))
 
 split_save_stories(tg_file_lst, wav_folder, wav_folder_train, wav_folder_test, wav_folder_untrimmed, ort_folder, second_ort_folder, prompt_folder)

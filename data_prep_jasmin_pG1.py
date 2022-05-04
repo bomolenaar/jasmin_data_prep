@@ -33,6 +33,7 @@ for name in os.listdir(wav_folder):
 
 
 def gen_trans_wavs(wavs, wav_folder, wav_folder_train, trans_folder, wav_folder_untrimmed):
+    delta_skipped = 0
     for name in wavs:
         basename = name.split('.')[0]
         file = open(original + basename + '.awd', 'r', encoding='utf8').readlines()
@@ -40,18 +41,25 @@ def gen_trans_wavs(wavs, wav_folder, wav_folder_train, trans_folder, wav_folder_
         transcript = []
         transcript_text = ""
         number = 1
+        ignore_words = {'',
+                        'ggg.', '!ggg.', 'xxx.', '!xxx',
+                        'uh', 'uh.', 'uh..', 'uhm', 'uhm.', 'uhm..'}
 
         for line in range(15, len(file)):
             if 'xmin =' in file[line]:
                 xmin = float(re.findall("\d+\.?\d*", file[line])[0])
                 xmax = float(re.findall("\d+\.?\d*", file[line + 1])[0])
                 word = re.findall('"([^"]*)"', file[line + 2])[0]
-                if (word != "") and (word != 'ggg.') and (word != '!ggg.') and (word != 'xxx.') and (word != 'uh.'):
+                if word not in ignore_words:
                     transcript.append([word, xmin, xmax])
-                    # if '...' in word:
+                    if ('...' in word) and (len(transcript) >= 2):
+                        delta = float(transcript[-1][1]) - float(transcript[-2][2])
+                        if delta <= 0.5:
+                            delta_skipped += 1
+                            continue
+                    # elif '...' in word:
                     #     continue
-                    # el
-                    if ('.' in word) or ('?' in word):
+                    elif ('.' in word) or ('?' in word):
                         start = transcript[0][1]
                         end = transcript[-1][2]
                         for word, xmin, xmax in transcript:
@@ -73,6 +81,9 @@ def gen_trans_wavs(wavs, wav_folder, wav_folder_train, trans_folder, wav_folder_
 
     # remove empty wav folder
     shutil.rmtree(wav_folder)
+
+    # print(f"'...' deltas skipped: {delta_skipped}")
+
 
 gen_trans_wavs(wavs, wav_folder, train_set, trans_folder, wav_untrimmed)
 

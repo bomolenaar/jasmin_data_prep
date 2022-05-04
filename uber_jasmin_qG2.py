@@ -18,7 +18,7 @@ if os.path.exists('utils'):
     # 1. DATA SELECTION
     # Optional: uncomment the following lines to select and praat the files
     print("Data selection...")
-    os.system('python3 data_sel_jasmin_G2.py ' + subset + ' ' + project_folder)
+    os.system('python3 data_sel_jasmin_qG2.py ' + subset + ' ' + project_folder)
     # You need to run these two scripts on Windows (not working on Linux yet)
     # create data directory and subdirs
     os.system(f'mkdir -p {subset}/data')
@@ -34,7 +34,7 @@ if os.path.exists('utils'):
 
     # 2. DATA PREPARATION
     print("Data preparation...")
-    os.system('python3 data_prep_jasmin_G2.py ' + subset + ' ' + project_folder)
+    os.system('python3 data_prep_jasmin_qG2.py ' + subset + ' ' + project_folder)
 
     # 3. DATA CHECKING
     os.system(f'./utils/validate_data_dir.sh {subset}/data/train/ --no-feats')
