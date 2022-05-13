@@ -34,6 +34,7 @@ for name in os.listdir(wav_folder):
 
 def gen_trans_wavs(wavs, wav_folder, wav_folder_train, trans_folder, wav_folder_untrimmed):
     delta_skipped = 0
+    uhms_skipped = 0
     for name in wavs:
         basename = name.split('.')[0]
         file = open(original + basename + '.awd', 'r', encoding='utf8').readlines()
@@ -57,9 +58,10 @@ def gen_trans_wavs(wavs, wav_folder, wav_folder_train, trans_folder, wav_folder_
                         if delta <= 0.5:
                             delta_skipped += 1
                             continue
-                    # elif '...' in word:
-                    #     continue
                     elif ('.' in word) or ('?' in word):
+                        if (len(transcript) == 1) and ("uh" in transcript[0][0]):
+                            uhms_skipped += 1
+                            continue
                         start = transcript[0][1]
                         end = transcript[-1][2]
                         for word, xmin, xmax in transcript:
@@ -83,6 +85,7 @@ def gen_trans_wavs(wavs, wav_folder, wav_folder_train, trans_folder, wav_folder_
     shutil.rmtree(wav_folder)
 
     # print(f"'...' deltas skipped: {delta_skipped}")
+    print(f"uh(m)... skipped: {uhms_skipped}")
 
 
 gen_trans_wavs(wavs, wav_folder, train_set, trans_folder, wav_untrimmed)
