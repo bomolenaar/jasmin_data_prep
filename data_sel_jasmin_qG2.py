@@ -128,12 +128,12 @@ def gen_trans_wavs(wav_folder, wav_folder_train, trans_folder, wav_folder_untrim
                         for word, xmin, xmax in transcript:
                             transcript_text += word + ' '
 
-                        with open(f"{trans_folder}{basename}_{str(number).zfill(3)}.ort", 'w',
+                        with open(f"{trans_folder}{basename}_1_{str(number).zfill(3)}.ort", 'w',
                                   encoding='utf-8') as transcript_file:
                             transcript_file.write(transcript_text)
 
                         os.system(
-                            f"sox {wav_folder}{basename}.wav {wav_folder_train}{basename}_{str(number).zfill(3)}.wav trim {start} ={end} pad 0.3 0.3")
+                            f"sox {wav_folder}{basename}.wav {wav_folder_train}{basename}_1_{str(number).zfill(3)}.wav trim {start} ={end} pad 0.3 0.3")
 
                         transcript = []
                         transcript_text = ""

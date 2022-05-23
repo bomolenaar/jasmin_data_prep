@@ -1,7 +1,5 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-## Please, modify the TODO instance (x1) to establish 
-## the selection criteria (by default Group = 1)
 
 import re
 import os
@@ -122,12 +120,12 @@ def gen_trans_wavs(wav_folder, tier_folder, trans_folder, wav_folder_untrimmed):
                         for word, xmin, xmax in transcript:
                             transcript_text += word + ' '
 
-                        with open(f"{trans_folder}{basename}_{str(number).zfill(3)}.ort", 'w',
+                        with open(f"{trans_folder}{basename}_1_{str(number).zfill(3)}.ort", 'w',
                                   encoding='utf-8') as transcript_file:
                             transcript_file.write(transcript_text)
 
                         os.system(
-                            f"sox {wav_folder}{basename}.wav {wav_folder}{basename}_{str(number).zfill(3)}.wav trim {start} ={end} pad 0.3 0.3")
+                            f"sox {wav_folder}{basename}.wav {wav_folder}{basename}_1_{str(number).zfill(3)}.wav trim {start} ={end} pad 0.3 0.3")
 
                         transcript = []
                         transcript_text = ""
