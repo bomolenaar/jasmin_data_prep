@@ -1,29 +1,28 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import re, sys, os
+import re, sys, os, shutil
+import pandas as pd
 import os.path
 
-if (len(sys.argv) < 4):
-    print("You must add three arguments: a folder name for generating the files: test then train; and the root path to this project folder.")
+if (len(sys.argv) < 3):
+    print("You must add two arguments: a folder name for generating the files and the root path to this project folder.")
     sys.exit(-1)
 
-subset1 = sys.argv[1]
-subset2 = sys.argv[2]
-myfolder = sys.argv[3]
+collection = sys.argv[1]
+myfolder = sys.argv[2]
+
 ## DIRECTORIES all of them ending with / ##
 # output data dir, e.g.; "/vol/tensusers3/nvhelleman/jasmin/data/"
-filedir1 = os.path.join(myfolder, subset1, 'data/')
-filedir2 = os.path.join(myfolder, subset2, 'data/')
-original = os.path.join(myfolder, subset2, 'manual_transcriptions/')
-G1_ort = os.path.join(myfolder, subset1, 'manual_transcriptions/')
-G1_prompts = os.path.join(myfolder, subset1, 'prompts/')
+filedir = os.path.join(myfolder, collection, "data/")
 # wav (test) files to use dir, e.g.; "/vol/tensusers3/nvhelleman/jasmin/20220210/wav_files_to_use/"
-test_set = os.path.join(myfolder, subset1, 'wav_files_to_use_test/')
+test_set = os.path.join(myfolder, collection, 'wav_files_to_use_test/')
 # wav (train)
-train_set = os.path.join(myfolder, subset2, 'wav_files_to_use_train/')
+train_set = os.path.join(myfolder, collection, 'wav_files_to_use_train/')
+trans_folder = os.path.join(myfolder, collection, 'manual_transcriptions/')
 # rec to use file
-rec = os.path.join(myfolder, subset1, 'rec_to_use.txt')
+recs = os.path.join(collection, 'rec_to_use.txt')
+
 
 ## TRAIN / TEST SET ##
 TRAIN_PATH = 'train/'
@@ -35,14 +34,13 @@ for name in os.listdir(train_set):
 for name in os.listdir(test_set):
     test.append(name)   # => test set
 
-
 ## TEXT ##
-def text(filenames, filedir):
+def text(filenames):
     results = []
     transcript = ""
     for name in filenames:
         basename = name.split('.')[0]
-        file = filedir + basename + '.ort'
+        file = trans_folder + basename + '.ort'
         text = [line for line in open(file, 'r', encoding='utf-8').readlines()]
         for line in text:
             transcript += line.strip('\n')
@@ -51,10 +49,9 @@ def text(filenames, filedir):
     return '\n'.join(sorted(results))
 
 
-with open(filedir2+TRAIN_PATH+'text', 'w', encoding='utf-8') as train_text, open(filedir1+TEST_PATH+'text', 'w', encoding='utf-8') as test_text:
-    train_text.write(text(train, original)+ '\n')
-    test_text.write(text(test, G1_ort)+ '\n')
-
+with open(filedir+TRAIN_PATH+'text', 'w', encoding='utf-8') as train_text, open(filedir+TEST_PATH+'text', 'w', encoding='utf-8') as test_text:
+    train_text.write(text(train)+ '\n')
+    test_text.write(text(test)+ '\n')
 
 ## UTT2SPK ##
 def utt2spk(filenames):
@@ -66,7 +63,7 @@ def utt2spk(filenames):
     return '\n'.join(sorted(results))
 
 
-with open(filedir2+TRAIN_PATH+'utt2spk', 'w', encoding='utf-8') as train_text, open(filedir1+TEST_PATH+'utt2spk', 'w', encoding='utf-8') as test_text:
+with open(filedir+TRAIN_PATH+'utt2spk', 'w', encoding='utf-8') as train_text, open(filedir+TEST_PATH+'utt2spk', 'w', encoding='utf-8') as test_text:
     train_text.write(utt2spk(train))
     test_text.write(utt2spk(test))
 
@@ -80,20 +77,20 @@ def wav_scp(filenames, set):
     return "\n".join(sorted(results))
 
 
-with open(filedir2+TRAIN_PATH+'wav.scp', 'w', encoding='utf-8') as train_text, open(filedir1+TEST_PATH+'wav.scp', 'w', encoding='utf-8') as test_text:
+with open(filedir+TRAIN_PATH+'wav.scp', 'w', encoding='utf-8') as train_text, open(filedir+TEST_PATH+'wav.scp', 'w', encoding='utf-8') as test_text:
     train_text.write(wav_scp(train, train_set)+ '\n')
     test_text.write(wav_scp(test, test_set)+ '\n')
 
 
 ## SPK2UTT ##
 def spk2utt():
-    os.system('utils/utt2spk_to_spk2utt.pl '+filedir2+TRAIN_PATH+'/utt2spk > '+filedir2+TRAIN_PATH+'/spk2utt')
-    os.system('utils/utt2spk_to_spk2utt.pl '+filedir1+TEST_PATH+'/utt2spk > '+filedir1+TEST_PATH+'/spk2utt')
+    os.system('utils/utt2spk_to_spk2utt.pl '+filedir+TRAIN_PATH+'/utt2spk > '+filedir+TRAIN_PATH+'/spk2utt')
+    os.system('utils/utt2spk_to_spk2utt.pl '+filedir+TEST_PATH+'/utt2spk > '+filedir+TEST_PATH+'/spk2utt')
 
 
 spk2utt()
 
-with open(filedir2+TRAIN_PATH+'utt2spk', 'a') as train_text, open(filedir1+TEST_PATH+'utt2spk', 'a') as test_text:
+with open(filedir+TRAIN_PATH+'utt2spk', 'a') as train_text, open(filedir+TEST_PATH+'utt2spk', 'a') as test_text:
     train_text.write('\n')
     test_text.write('\n')
 
@@ -131,19 +128,19 @@ def segments(filenames):
 def spk2gender(filenames):
     results = []
     for name in filenames:
-        file = open(rec)
+        file = open(recs, 'r', encoding='utf8').readlines()
         basename = name.split('.')[0]
         spk_id = basename.split('_')[0]
         for line in file:
-          if spk_id in line:
-            if "F" in line:
-              results.append("{} {}".format(spk_id, "f"))
-            elif "M" in line:
-              results.append("{} {}".format(spk_id, "m"))
+            if spk_id in line:
+                if "F" in line:
+                    results.append("{} {}".format(spk_id, "f"))
+                elif "M" in line:
+                    results.append("{} {}".format(spk_id, "m"))
     unique_results = list(set(results))
     return "\n".join(sorted(unique_results))
 
 
-with open(filedir2+TRAIN_PATH+'spk2gender', 'w', encoding='utf-8') as train_text, open(filedir1+TEST_PATH+'spk2gender', 'w', encoding='utf-8') as test_text:
+with open(filedir+TRAIN_PATH+'spk2gender', 'w', encoding='utf-8') as train_text, open(filedir+TEST_PATH+'spk2gender', 'w', encoding='utf-8') as test_text:
     train_text.write(spk2gender(train)+ '\n')
     test_text.write(spk2gender(test)+ '\n')

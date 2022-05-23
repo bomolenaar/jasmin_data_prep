@@ -20,79 +20,10 @@ os.system('./encoding.sh '+original_prev + ' '+original)
 # wav (test) files to use dir, e.g.; "/vol/tensusers3/nvhelleman/jasmin/20220210/wav_files_to_use/"
 # test_set = os.path.join(myfolder, subset, 'wav_files_to_use_test/')
 # wav (train)
-wav_folder = os.path.join(myfolder, subset, 'wav_files_to_use/')
 train_set = os.path.join(myfolder, subset, 'wav_files_to_use_train/')
 trans_folder = os.path.join(myfolder, subset, 'manual_transcriptions/')
-wav_untrimmed = os.path.join(myfolder, subset, '.wav_files_untrimmed/')
 # rec to use file
 rec = os.path.join(myfolder, subset, 'rec_to_use.txt')
-
-wavs = []
-for name in os.listdir(wav_folder):
-    wavs.append(name)
-
-
-def gen_trans_wavs(wavs, wav_folder, wav_folder_train, trans_folder, wav_folder_untrimmed):
-    delta_skipped = 0
-    uhms_skipped = 0
-    for name in wavs:
-        basename = name.split('.')[0]
-        file = open(original + basename + '.awd', 'r', encoding='utf8').readlines()
-
-        transcript = []
-        transcript_text = ""
-        number = 1
-        ignore_words = {'',
-                        'ggg', 'ggg.', '!ggg.', 'xxx', 'xxx.', '!xxx',
-                        'uh', 'uh.', 'uh..', 'uhm', 'uhm.', 'uhm..'}
-
-        for line in range(15, len(file)):
-            if 'xmin =' in file[line]:
-                xmin = float(re.findall("\d+\.?\d*", file[line])[0])
-                xmax = float(re.findall("\d+\.?\d*", file[line + 1])[0])
-                word = re.findall('"([^"]*)"', file[line + 2])[0]
-                if word not in ignore_words:
-                    transcript.append([word, xmin, xmax])
-                    if ('...' in word) and (len(transcript) >= 2):
-                        delta = float(transcript[-1][1]) - float(transcript[-2][2])
-                        if delta <= 0.5:
-                            delta_skipped += 1
-                            continue
-                    # elif '...' in word:
-                    #     continue
-                    elif ('.' in word) or ('?' in word):
-                        if (len(transcript) == 1) and ("uh" in transcript[0][0]):
-                            uhms_skipped += 1
-                            continue
-                        start = transcript[0][1]
-                        end = transcript[-1][2]
-                        for word, xmin, xmax in transcript:
-                            transcript_text += word + ' '
-
-                        with open(f"{trans_folder}{basename}_{str(number).zfill(3)}.ort", 'w',
-                                  encoding='utf-8') as transcript_file:
-                            transcript_file.write(transcript_text)
-
-                        os.system(
-                            f"sox {wav_folder}{basename}.wav {wav_folder_train}{basename}_{str(number).zfill(3)}.wav trim {start} ={end} pad 0.3 0.3")
-
-                        transcript = []
-                        transcript_text = ""
-                        number += 1
-
-        # move untrimmed file
-        os.system(f"mv {wav_folder}{basename}.wav {wav_folder_untrimmed}{basename}.wav")
-
-    # remove empty wav folder
-    shutil.rmtree(wav_folder)
-
-    # print(f"'...' deltas skipped: {delta_skipped}")
-    print(f"uh(m)... skipped: {uhms_skipped}")
-
-
-gen_trans_wavs(wavs, wav_folder, train_set, trans_folder, wav_untrimmed)
-
-os.system(f"python3 string_norm.py {trans_folder} {trans_folder}")
 
 ## TRAIN / TEST SET ##
 TRAIN_PATH = 'train/'

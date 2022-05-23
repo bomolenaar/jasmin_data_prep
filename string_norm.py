@@ -13,7 +13,7 @@ if infolder == outfolder:
     outfolder = outfolder[:-1] + '_filtered/'
 
 if os.path.isdir(outfolder):
-    os.system(f"rm -r {outfolder}")
+    os.rmdir(outfolder)
 os.mkdir(outfolder)
 
 if infolder.split('/')[1] != "":
@@ -23,7 +23,7 @@ elif infolder.split("/")[1] == "":
     infolder_new = '.' + infolder[:-1] + '_unfiltered/'
 
 if os.path.isdir(infolder_new):
-    os.system(f"rm -r {infolder_new}")
+    os.rmdir(infolder_new)
 
 file_lst = []
 for dirpath, dirnames, filenames in os.walk(infolder):

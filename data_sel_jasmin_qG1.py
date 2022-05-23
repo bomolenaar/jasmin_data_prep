@@ -6,6 +6,7 @@ import os
 import glob
 import sys
 import shutil
+import math
 from pathlib import Path
 
 if (len(sys.argv) < 4):
@@ -21,12 +22,13 @@ jasmin_folder = '/vol/bigdata/corpora/JASMIN/'
 recordings = '/vol/bigdata/corpora/JASMIN/CDdoc/data/meta/text/nl/recordings.txt'
 textgrid_path = '/vol/tensusers4/bmolenaar/A3proj/Limonard_textgrids_utf8'
 selected_recordings = os.path.join(main_folder, 'rec_to_use.txt')
-wav_folder = os.path.join(second_folder, 'wav_files_to_use/')
-wav_folder_train = os.path.join(second_folder, 'wav_files_to_use_train/')
-wav_folder_test = os.path.join(main_folder, 'wav_files_to_use_test/')
-wav_folder_untrimmed = os.path.join(main_folder, 'wav_files_untrimmed/')
-ort_folder = os.path.join(main_folder, 'manual_transcriptions/')
+
+wav_folder = os.path.join(main_folder, 'wav_files_to_use/')
+second_wav_folder = os.path.join(second_folder, 'wav_files_to_use/')
+wav_folder_untrimmed = os.path.join(main_folder, '.wav_files_untrimmed/')
+
 prompt_folder = os.path.join(main_folder, 'prompts/')
+ort_folder = os.path.join(main_folder, 'manual_transcriptions/')
 second_ort_folder = os.path.join(second_folder, 'manual_transcriptions/')
 
 
@@ -41,7 +43,50 @@ if os.path.exists(path_to_second_folder):
     shutil.rmtree(path_to_second_folder)
 path_to_second_folder.mkdir()
 
-def split_save_stories(textgrid_list, wav_folder, wav_folder_train, wav_folder_test, wav_folder_untrimmed, ort_folder, second_ort_folder, prompt_folder):
+
+# generate selected recordings, change the if statement accordingly
+with open(recordings,'r', encoding='utf-8') as f_in, open(selected_recordings,'w', encoding='utf-8') as f_out:
+    for line in f_in:
+        w_lst = line.split()
+        if (w_lst[3] == '1') and (w_lst[2] == 'comp-q'):
+            f_out.write(line)
+
+# create folders if not exist, remove folders if exist
+folder_lst = [prompt_folder, ort_folder, wav_folder, second_wav_folder, wav_folder_untrimmed, second_ort_folder]
+for folder in folder_lst:
+    if os.path.isdir(folder):
+        filelist = [f for f in os.listdir(folder)]
+        for f in filelist:
+            if os.path.isdir(f):
+                shutil.rmtree(f)
+            else:
+                os.remove(os.path.join(folder,f))
+    else:
+        os.mkdir(folder)
+
+# put selected recordings .wav my folder
+name_lst = []
+with open(selected_recordings, 'r', encoding='utf-8') as f:
+    for line in f:
+        name_lst.append(line.split()[0])
+
+wav_file_lst = []
+tg_file_lst = []
+# Cristian: this is not optimized at all... but it works :)
+for i in name_lst:
+    for dirpath, dirnames, filenames in os.walk(jasmin_folder):
+        for filename in filenames:
+            if i in filename:
+                if filename.endswith('.wav'):
+                    wav_file_lst.append(os.path.join(dirpath, filename))
+    for dirpath, dirnames, filenames in os.walk(textgrid_path):
+        for filename in filenames:
+            if i in filename:
+                if filename.endswith('.TextGrid'):
+                    tg_file_lst.append(os.path.join(dirpath, filename))
+
+
+def split_save_stories(textgrid_list, wav_folder, second_wav_folder, wav_folder_untrimmed, prompt_folder, ort_folder, second_ort_folder):
     """takes JASMIN comp-q G1 files and segments them into 1st and 2nd story;
     1st includes prompts, 2nd does not"""
     delta_skipped = 0
@@ -75,43 +120,31 @@ def split_save_stories(textgrid_list, wav_folder, wav_folder_train, wav_folder_t
                     xmin_prompt = round(float(re.findall("\d+\.?\d*", file[line-2])[0]), 4)
                     xmax_prompt = round(float(re.findall("\d+\.?\d*", file[line-1])[0]), 4)
 
-                    # os.system(f"sox {wav_folder}{basename}.wav {wav_folder_test}{basename}_1_{str(number).zfill(3)}.wav trim {xmin_prompt} ={xmax_prompt} pad 0.3 0.3")
-                    #
-                    # with open(f"{prompt_folder}{basename}_1_{str(number).zfill(3)}.prompt", 'w', encoding='utf-8') as prompt_file:
-                    #     prompt_file.write(prompt)
+                    xmax_prompt_split = format(xmax_prompt, '.2f')
+
+                    os.system(f"sox {wav_folder}{basename}.wav {wav_folder}{basename}_1_{str(number).zfill(3)}.wav trim {xmin_prompt} ={xmax_prompt} pad 0.3 0.3")
+
+                    with open(f"{prompt_folder}{basename}_1_{str(number).zfill(3)}.prompt", 'w', encoding='utf-8') as prompt_file:
+                        prompt_file.write(prompt)
 
                     # iterate over manual transcriptions
                     for line in range(transcripts_start, transcripts_end):
                         if ('xmin =' in file[line]) and ('name =' not in file[line-5]):
                             xmin = round(float(re.findall("\d+\.?\d*", file[line])[0]), 4)
                             xmax = round(float(re.findall("\d+\.?\d*", file[line+1])[0]), 4)
+
                             if (xmin >= xmin_prompt) and (xmax <= xmax_prompt):
                                 word = re.findall('"([^"]*)"', file[line+2])[0]
 
-                                # SOLUTION:
-                                # 1. get # decimals xmin, xmax, xmin_prompt, xmax_prompt
-                                # 2. round to lowest of matching set
-                                # 3. compare as usual without modifying the values
+                                xmax_split = format(xmax, '.2f')
 
-                                ### DEBUG BLOCK ###
-                                names = {'fn000051', 'fn000066', 'fn000068'}
-                                if basename in names:
-                                    print(basename, number)
-                                    print(prompt)
-                                    print("xmin_prompt", xmin_prompt)
-                                    print("xmin", xmin)
-                                    print("xmax_prompt", xmax_prompt)
-                                    print("xmax", xmax)
-                                    print()
-                                ### END DEBUG BLOCK ###
-
-                                transcript.append([word, xmin, xmax])
-                                if xmax == xmax_prompt:
-                                    for word, xmin, xmax in transcript:
+                                transcript.append(word)
+                                if xmax_split == xmax_prompt_split:
+                                    for word in transcript:
                                         if word != "":
                                             transcript_text += word + ' '
-                                    # with open(f"{ort_folder}{basename}_1_{str(number).zfill(3)}.ort", 'w', encoding='utf-8') as transcript_file:
-                                    #     transcript_file.write(transcript_text)
+                                    with open(f"{ort_folder}{basename}_1_{str(number).zfill(3)}.ort", 'w', encoding='utf-8') as transcript_file:
+                                        transcript_file.write(transcript_text)
                                     transcript = []
                                     transcript_text = ""
                                     number += 1
@@ -142,10 +175,10 @@ def split_save_stories(textgrid_list, wav_folder, wav_folder_train, wav_folder_t
                             for word, xmin, xmax in transcript:
                                 transcript_text += word + ' '
 
-                            # with open(f"{second_ort_folder}{basename}_2_{str(number).zfill(3)}.ort", 'w', encoding='utf-8') as transcript_file:
-                            #     transcript_file.write(transcript_text)
-                            #
-                            # os.system(f"sox {wav_folder}{basename}.wav {wav_folder_train}{basename}_2_{str(number).zfill(3)}.wav trim {start} ={end} pad 0.3 0.3")
+                            with open(f"{second_ort_folder}{basename}_2_{str(number).zfill(3)}.ort", 'w', encoding='utf-8') as transcript_file:
+                                transcript_file.write(transcript_text)
+
+                            os.system(f"sox {wav_folder}{basename}.wav {second_wav_folder}{basename}_2_{str(number).zfill(3)}.wav trim {start} ={end} pad 0.3 0.3")
 
                             transcript = []
                             transcript_text = ""
@@ -154,54 +187,9 @@ def split_save_stories(textgrid_list, wav_folder, wav_folder_train, wav_folder_t
         # move untrimmed files
         os.system(f"mv {wav_folder}{basename}.wav {wav_folder_untrimmed}{basename}.wav")
 
-    # remove empty wav folder
-    shutil.rmtree(wav_folder)
-
     print(f"'...' deltas skipped: {delta_skipped}")
     print(f"uh(m)... skipped: {uhms_skipped}")
 
-
-# generate selected recordings, change the if statement accordingly
-with open(recordings,'r', encoding='utf-8') as f_in, open(selected_recordings,'w', encoding='utf-8') as f_out:
-    for line in f_in:
-        w_lst = line.split()
-        if (w_lst[3] == '1') and (w_lst[2] == 'comp-q'):
-            f_out.write(line)
-
-# create folders if not exist, remove folders if exist
-folder_lst = [prompt_folder, ort_folder, wav_folder_test,
-              wav_folder, wav_folder_untrimmed, second_ort_folder, wav_folder_train]
-for folder in folder_lst:
-    if os.path.isdir(folder):
-        filelist = [f for f in os.listdir(folder)]
-        for f in filelist:
-            if os.path.isdir(f):
-                shutil.rmtree(f)
-            else:
-                os.remove(os.path.join(folder,f))
-    else:
-        os.mkdir(folder)
-
-# put selected recordings .wav my folder
-name_lst = []
-with open(selected_recordings, 'r', encoding='utf-8') as f:
-    for line in f:
-        name_lst.append(line.split()[0])
-
-wav_file_lst = []
-tg_file_lst = []
-# Cristian: this is not optimized at all... but it works :)
-for i in name_lst:
-    for dirpath, dirnames, filenames in os.walk(jasmin_folder):
-        for filename in filenames:
-            if i in filename:
-                if filename.endswith('.wav'):
-                    wav_file_lst.append(os.path.join(dirpath, filename))
-    for dirpath, dirnames, filenames in os.walk(textgrid_path):
-        for filename in filenames:
-            if i in filename:
-                if filename.endswith('.TextGrid'):
-                    tg_file_lst.append(os.path.join(dirpath, filename))
 
 print('wav_file_lst',len(wav_file_lst))
 for j in wav_file_lst:
@@ -210,4 +198,11 @@ for j in wav_file_lst:
 
 print('textgrid_file_lst', len(tg_file_lst))
 
-split_save_stories(tg_file_lst, wav_folder, wav_folder_train, wav_folder_test, wav_folder_untrimmed, ort_folder, second_ort_folder, prompt_folder)
+print("Segmenting...")
+split_save_stories(tg_file_lst, wav_folder, second_wav_folder, wav_folder_untrimmed, prompt_folder, ort_folder, second_ort_folder)
+
+# normalise manual transcriptions, prompts for G1-1 and G1-2
+print("String normalisation...")
+os.system(f'python3 string_norm.py {ort_folder} {ort_folder}')
+os.system(f'python3 string_norm.py {prompt_folder} {prompt_folder}')
+os.system(f'python3 string_norm.py {second_ort_folder} {second_ort_folder}')
