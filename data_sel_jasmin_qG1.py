@@ -13,11 +13,11 @@ if (len(sys.argv) < 4):
     print("You must add three arguments: folder names for generating qG1-1 and qG1-2 files and the root path to this project folder.")
     sys.exit(-1)
 
-
 subset1 = sys.argv[1]
 subset2 = sys.argv[2]
 main_folder = os.path.join(sys.argv[3], subset1)
 second_folder = os.path.join(sys.argv[3], subset2)
+
 jasmin_folder = '/vol/bigdata/corpora/JASMIN/'
 recordings = '/vol/bigdata/corpora/JASMIN/CDdoc/data/meta/text/nl/recordings.txt'
 textgrid_path = '/vol/tensusers4/bmolenaar/A3proj/Limonard_textgrids_utf8'
@@ -89,8 +89,9 @@ for i in name_lst:
 def split_save_stories(textgrid_list, wav_folder, second_wav_folder, wav_folder_untrimmed, prompt_folder, ort_folder, second_ort_folder):
     """takes JASMIN comp-q G1 files and segments them into 1st and 2nd story;
     1st includes prompts, 2nd does not"""
+
     delta_skipped = 0
-    uhms_skipped = 0
+
     for name in textgrid_list:
         file = open(name, 'r', encoding='utf8').readlines()
         basename = name.split('.')[0].split('/')[-1]
@@ -100,7 +101,7 @@ def split_save_stories(textgrid_list, wav_folder, second_wav_folder, wav_folder_
 
         ignore_words = {'',
                         'ggg', 'ggg.', '!ggg.', 'xxx', 'xxx.', '!xxx',
-                        'uh', 'uh.', 'uh..', 'uhm', 'uhm.', 'uhm..'}
+                        'uh', 'uh.', 'uh..', 'uh...', 'uhm', 'uhm.', 'uhm..', 'uhm...'}
 
         for line in range(len(file)):
             if 'item [1]' in file[line]:
@@ -108,7 +109,7 @@ def split_save_stories(textgrid_list, wav_folder, second_wav_folder, wav_folder_
             if 'item [2]' in file[line]:
                 transcripts_end = line-1
             if 'item [4]' in file[line]:
-                prompts_start = line
+                prompts_start = line+6
             if 'item [5]' in file[line]:
                 prompts_end = line-1
 
@@ -159,7 +160,7 @@ def split_save_stories(textgrid_list, wav_folder, second_wav_folder, wav_folder_
                     word = re.findall('"([^"]*)"', file[line+2])[0]
                     if word not in ignore_words:
                         transcript.append([word, xmin, xmax])
-                        if ('...' in word) and (len(transcript) >= 2):
+                        if ('...' in word) and (len(transcript) > 1):
                             delta = transcript[-1][1] - transcript[-2][2]
                             if delta <= 0.5:
                                 delta_skipped += 1
@@ -167,9 +168,6 @@ def split_save_stories(textgrid_list, wav_folder, second_wav_folder, wav_folder_
                         # elif '...' in word:
                         #     continue
                         elif ('.' in word) or ('?' in word):
-                            if (len(transcript) == 1) and ("uh" in transcript[0][0]):
-                                uhms_skipped += 1
-                                continue
                             start = transcript[0][1]
                             end = transcript[-1][2]
                             for word, xmin, xmax in transcript:
@@ -188,7 +186,6 @@ def split_save_stories(textgrid_list, wav_folder, second_wav_folder, wav_folder_
         os.system(f"mv {wav_folder}{basename}.wav {wav_folder_untrimmed}{basename}.wav")
 
     print(f"'...' deltas skipped: {delta_skipped}")
-    print(f"uh(m)... skipped: {uhms_skipped}")
 
 
 print('wav_file_lst',len(wav_file_lst))

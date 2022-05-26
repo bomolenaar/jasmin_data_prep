@@ -87,7 +87,6 @@ for q in awd_file_lst:
 
 def gen_trans_wavs(wav_folder, tier_folder, trans_folder, wav_folder_untrimmed):
     delta_skipped = 0
-    uhms_skipped = 0
     for name in os.listdir(wav_folder):
         basename = name.split('.')[0]
         file = open(tier_folder + basename + '.awd', 'r', encoding='utf8').readlines()
@@ -97,7 +96,7 @@ def gen_trans_wavs(wav_folder, tier_folder, trans_folder, wav_folder_untrimmed):
         number = 1
         ignore_words = {'',
                         'ggg.', '!ggg.', 'xxx.', '!xxx',
-                        'uh', 'uh.', 'uh..', 'uhm', 'uhm.', 'uhm..'}
+                        'uh', 'uh.', 'uh..', 'uh...', 'uhm', 'uhm.', 'uhm..', 'uhm...'}
 
         for line in range(15, len(file)):
             if 'xmin =' in file[line]:
@@ -106,15 +105,12 @@ def gen_trans_wavs(wav_folder, tier_folder, trans_folder, wav_folder_untrimmed):
                 word = re.findall('"([^"]*)"', file[line + 2])[0]
                 if word not in ignore_words:
                     transcript.append([word, xmin, xmax])
-                    if ('...' in word) and (len(transcript) >= 2):
+                    if ('...' in word) and (len(transcript) > 1):
                         delta = float(transcript[-1][1]) - float(transcript[-2][2])
                         if delta <= 0.5:
                             delta_skipped += 1
                             continue
                     elif ('.' in word) or ('?' in word):
-                        if (len(transcript) == 1) and ("uh" in transcript[0][0]):
-                            uhms_skipped += 1
-                            continue
                         start = transcript[0][1]
                         end = transcript[-1][2]
                         for word, xmin, xmax in transcript:
@@ -135,7 +131,6 @@ def gen_trans_wavs(wav_folder, tier_folder, trans_folder, wav_folder_untrimmed):
         os.system(f"mv {wav_folder}{basename}.wav {wav_folder_untrimmed}{basename}.wav")
 
     print(f"'...' deltas skipped: {delta_skipped}")
-    print(f"uh(m)... skipped: {uhms_skipped}")
 
 
 os.system(f'/usr/bin/praat --run step1_tg_to_std_format.praat {awd_folder} {praat_folder} .awd .awd')

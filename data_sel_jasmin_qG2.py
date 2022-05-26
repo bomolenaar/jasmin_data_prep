@@ -17,15 +17,15 @@ if (len(sys.argv) < 3):
 
 date = sys.argv[1]
 myfolder = os.path.join(sys.argv[2], date)
+
 jasmin_folder = '/vol/bigdata/corpora/JASMIN/'
 recordings = '/vol/bigdata/corpora/JASMIN/CDdoc/data/meta/text/nl/recordings.txt'
 selected_recordings = os.path.join(myfolder, 'rec_to_use.txt')
+
 wav_folder = os.path.join(myfolder, 'wav_files_to_use')
 awd_folder = os.path.join(myfolder, 'awd_files_to_use')
+
 trans_folder = os.path.join(myfolder, 'manual_transcriptions')
-train_folder = os.path.join(myfolder, 'wav_files_to_use_train')
-praat_folder = os.path.join(myfolder, 'praat_files_to_use')
-tier_folder = os.path.join(myfolder, 'tier')
 wav_untrimmed_folder = os.path.join(myfolder, '.wav_files_untrimmed/')
 
 # remove my old folder
@@ -44,7 +44,7 @@ with open(recordings,'r', encoding='utf-8') as f_in, open(selected_recordings,'w
                 f_out.write(line)
 
 # create folders if not exist, remove folders if exist
-myfolder_lst = [wav_folder, awd_folder, trans_folder, train_folder, praat_folder, tier_folder, wav_untrimmed_folder]
+myfolder_lst = [wav_folder, awd_folder, trans_folder, wav_untrimmed_folder]
 for folder in myfolder_lst:
     if os.path.isdir(folder):
         filelist = [f for f in os.listdir(folder)]
@@ -88,7 +88,6 @@ for q in awd_file_lst:
 
 def gen_trans_wavs(wav_folder, wav_folder_train, trans_folder, wav_folder_untrimmed):
     delta_skipped = 0
-    uhms_skipped = 0
 
     wavs = []
     for name in os.listdir(wav_folder):
@@ -103,7 +102,7 @@ def gen_trans_wavs(wav_folder, wav_folder_train, trans_folder, wav_folder_untrim
         number = 1
         ignore_words = {'',
                         'ggg', 'ggg.', '!ggg.', 'xxx', 'xxx.', '!xxx',
-                        'uh', 'uh.', 'uh..', 'uhm', 'uhm.', 'uhm..'}
+                        'uh', 'uh.', 'uh..', 'uh...', 'uhm', 'uhm.', 'uhm..', 'uhm...'}
 
         for line in range(15, len(file)):
             if 'xmin =' in file[line]:
@@ -120,9 +119,6 @@ def gen_trans_wavs(wav_folder, wav_folder_train, trans_folder, wav_folder_untrim
                     # elif '...' in word:
                     #     continue
                     elif ('.' in word) or ('?' in word):
-                        if (len(transcript) == 1) and ("uh" in transcript[0][0]):
-                            uhms_skipped += 1
-                            continue
                         start = transcript[0][1]
                         end = transcript[-1][2]
                         for word, xmin, xmax in transcript:
@@ -146,7 +142,6 @@ def gen_trans_wavs(wav_folder, wav_folder_train, trans_folder, wav_folder_untrim
     shutil.rmtree(wav_folder)
 
     print(f"'...' deltas skipped: {delta_skipped}")
-    print(f"uh(m)... skipped: {uhms_skipped}")
 
 
 gen_trans_wavs(wav_folder, train_set, trans_folder, wav_untrimmed)
