@@ -18,20 +18,27 @@ subset2 = sys.argv[2]
 main_folder = os.path.join(sys.argv[3], subset1)
 second_folder = os.path.join(sys.argv[3], subset2)
 
+### Declarations ###
+# locations of static source directories
 jasmin_folder = '/vol/bigdata/corpora/JASMIN/'
 recordings = '/vol/bigdata/corpora/JASMIN/CDdoc/data/meta/text/nl/recordings.txt'
 textgrid_path = '/vol/tensusers4/bmolenaar/A3proj/Limonard_textgrids_utf8'
+# file to be generated with our speaker list
 selected_recordings = os.path.join(main_folder, 'rec_to_use.txt')
 
+# locations of local wav files
 wav_folder = os.path.join(main_folder, 'wav_files_to_use/')
 second_wav_folder = os.path.join(second_folder, 'wav_files_to_use/')
+# directory to move full wav files after segmentation
 wav_folder_untrimmed = os.path.join(main_folder, '.wav_files_untrimmed/')
 
+# location of directories to generate manual transcriptions and prompts
 prompt_folder = os.path.join(main_folder, 'prompts/')
 ort_folder = os.path.join(main_folder, 'manual_transcriptions/')
 second_ort_folder = os.path.join(second_folder, 'manual_transcriptions/')
 
 
+### Directory management ###
 # remove old main_folder and second_folder and create new ones
 path_to_main_folder = Path(main_folder)
 if os.path.exists(path_to_main_folder):
@@ -44,6 +51,7 @@ if os.path.exists(path_to_second_folder):
 path_to_second_folder.mkdir()
 
 
+### Select recordings ###
 # generate selected recordings, change the if statement accordingly
 with open(recordings,'r', encoding='utf-8') as f_in, open(selected_recordings,'w', encoding='utf-8') as f_out:
     for line in f_in:
@@ -51,6 +59,7 @@ with open(recordings,'r', encoding='utf-8') as f_in, open(selected_recordings,'w
         if (w_lst[3] == '1') and (w_lst[2] == 'comp-q'):
             f_out.write(line)
 
+### Directory management 2 ###
 # create folders if not exist, remove folders if exist
 folder_lst = [prompt_folder, ort_folder, wav_folder, second_wav_folder, wav_folder_untrimmed, second_ort_folder]
 for folder in folder_lst:
@@ -64,7 +73,7 @@ for folder in folder_lst:
     else:
         os.mkdir(folder)
 
-# put selected recordings .wav my folder
+# put selected recordings .wavs in my folder
 name_lst = []
 with open(selected_recordings, 'r', encoding='utf-8') as f:
     for line in f:
@@ -87,22 +96,33 @@ for i in name_lst:
 
 
 def split_save_stories(textgrid_list, wav_folder, second_wav_folder, wav_folder_untrimmed, prompt_folder, ort_folder, second_ort_folder):
-    """takes JASMIN comp-q G1 files and segments them into 1st and 2nd story;
-    1st includes prompts, 2nd does not"""
+    """
+    Method that takes JASMIN comp-q G1 files and segments them into 1st and 2nd story;
+    1st includes prompts, 2nd does not.
+    Segments for 1st story are based on prompt start and end times.
+    Segments for 2nd story are created based on periods, with the exception of a string ending in
+    variations of 'uh(m)...'. Segments that are less than 0.5s apart are merged.
+    """
 
+    # Var counting number of segments merged when less than some amount of time apart. Default 0.5s.
     delta_skipped = 0
 
+    # Iterate over TextGrid files
     for name in textgrid_list:
         file = open(name, 'r', encoding='utf8').readlines()
+        # get speaker id from TextGrid file name
         basename = name.split('.')[0].split('/')[-1]
-        number = 1
+
+        # declare some vars to use later
+        number = 1  # segment number for this speaker id
         transcript = []
         transcript_text = ""
-
+        # words to exclude from segments
         ignore_words = {'',
                         'ggg', 'ggg.', '!ggg.', 'xxx', 'xxx.', '!xxx',
                         'uh', 'uh.', 'uh..', 'uh...', 'uhm', 'uhm.', 'uhm..', 'uhm...'}
 
+        # Iterate over lines in .TextGrid file to determine location of transcript and prompt tiers
         for line in range(len(file)):
             if 'item [1]' in file[line]:
                 transcripts_start = line
@@ -113,71 +133,94 @@ def split_save_stories(textgrid_list, wav_folder, second_wav_folder, wav_folder_
             if 'item [5]' in file[line]:
                 prompts_end = line-1
 
-        # iterate over prompts
+        # iterate over prompts first to get 1st story
         for line in range(prompts_start, prompts_end):
+            # find prompt text intervals, starting at the first word
             if ('text =' in file[line]) and ('name =' not in file[line-7]):
                 prompt = re.findall('"([^"]*)"', file[line])[0]
-                if prompt != "":
+                if prompt != "":  # ignore empty prompt intervals
+                    # store prompt start and end times
                     xmin_prompt = round(float(re.findall("\d+\.?\d*", file[line-2])[0]), 4)
                     xmax_prompt = round(float(re.findall("\d+\.?\d*", file[line-1])[0]), 4)
 
+                    # store prompt end time with 2 decimals for later end-of-prompt check
                     xmax_prompt_split = format(xmax_prompt, '.2f')
 
+                    # crop segment from wav file and pad 0.3s silence on each end
                     os.system(f"sox {wav_folder}{basename}.wav {wav_folder}{basename}_1_{str(number).zfill(3)}.wav trim {xmin_prompt} ={xmax_prompt} pad 0.3 0.3")
 
+                    # write prompt string to file
                     with open(f"{prompt_folder}{basename}_1_{str(number).zfill(3)}.prompt", 'w', encoding='utf-8') as prompt_file:
                         prompt_file.write(prompt)
 
-                    # iterate over manual transcriptions
+                    # now iterate over manual transcriptions within prompts frame
                     for line in range(transcripts_start, transcripts_end):
                         if ('xmin =' in file[line]) and ('name =' not in file[line-5]):
+                            # store word start and end times
                             xmin = round(float(re.findall("\d+\.?\d*", file[line])[0]), 4)
                             xmax = round(float(re.findall("\d+\.?\d*", file[line+1])[0]), 4)
 
+                            # check if current transcript word is within prompt timeframe
                             if (xmin >= xmin_prompt) and (xmax <= xmax_prompt):
                                 word = re.findall('"([^"]*)"', file[line+2])[0]
 
+                                # store word end time with 2 decimals for later end-of-prompt check
                                 xmax_split = format(xmax, '.2f')
 
-                                transcript.append(word)
+                                # check if end of word time = end of prompt time
                                 if xmax_split == xmax_prompt_split:
                                     for word in transcript:
-                                        if word != "":
+                                        if word != "":  # ignore empty strings
+                                            # add word to transcript
                                             transcript_text += word + ' '
+
+                                    # write transcript string to file
                                     with open(f"{ort_folder}{basename}_1_{str(number).zfill(3)}.ort", 'w', encoding='utf-8') as transcript_file:
                                         transcript_file.write(transcript_text)
-                                    transcript = []
+
+                                    # reset transcript and segment counter
                                     transcript_text = ""
                                     number += 1
 
-        # iterate over manual transcriptions again but this time post prompts
-        number = 1
+        # iterate over manual transcriptions again but this time post prompts for 2nd stories
+        number = 1  # reset segment counter
         for line in range(transcripts_start, transcripts_end):
             if 'xmin =' in file[line]:
+                # store word start time
                 xmin = round((float(re.findall("\d+\.?\d*", file[line])[0])), 4)
+                # make sure we only use what is said after the last prompt is finished (= 2nd story)
                 if xmin > xmax_prompt:
+                    # store word end time
                     xmax = round(float(re.findall("\d+\.?\d*", file[line+1])[0]), 4)
                     word = re.findall('"([^"]*)"', file[line+2])[0]
+                    # exclude words from ignore set
                     if word not in ignore_words:
+                        # store word + start time + end time in a 3-tuple list
                         transcript.append([word, xmin, xmax])
+                        # check time since prev segment if current segment is only a single word with '...'
                         if ('...' in word) and (len(transcript) > 1):
                             delta = transcript[-1][1] - transcript[-2][2]
+                            # continue current segment if time since prev segment <= some amount of time (default 0.5s)
                             if delta <= 0.5:
                                 delta_skipped += 1
                                 continue
-                        # elif '...' in word:
-                        #     continue
+                        # now check if current word has a period or question mark == end of segment
                         elif ('.' in word) or ('?' in word):
+                            # get start and end time of the segment
                             start = transcript[0][1]
                             end = transcript[-1][2]
                             for word, xmin, xmax in transcript:
+                                # generate string with segment transcript
                                 transcript_text += word + ' '
 
+                            # write transcript string to file
                             with open(f"{second_ort_folder}{basename}_2_{str(number).zfill(3)}.ort", 'w', encoding='utf-8') as transcript_file:
                                 transcript_file.write(transcript_text)
 
+                            # crop segment from wav file and pad 0.3s silence on each end
                             os.system(f"sox {wav_folder}{basename}.wav {second_wav_folder}{basename}_2_{str(number).zfill(3)}.wav trim {start} ={end} pad 0.3 0.3")
 
+                            # reset transcript, string and segment counter
                             transcript = []
                             transcript_text = ""
                             number += 1
@@ -185,6 +228,7 @@ def split_save_stories(textgrid_list, wav_folder, second_wav_folder, wav_folder_
         # move untrimmed files
         os.system(f"mv {wav_folder}{basename}.wav {wav_folder_untrimmed}{basename}.wav")
 
+    # print number of segments merged based on delta
     print(f"'...' deltas skipped: {delta_skipped}")
 
 
@@ -195,6 +239,7 @@ for j in wav_file_lst:
 
 print('textgrid_file_lst', len(tg_file_lst))
 
+# generate segments
 print("Segmenting...")
 split_save_stories(tg_file_lst, wav_folder, second_wav_folder, wav_folder_untrimmed, prompt_folder, ort_folder, second_ort_folder)
 
