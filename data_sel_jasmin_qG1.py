@@ -138,7 +138,8 @@ def split_save_stories(textgrid_list, wav_folder, second_wav_folder, wav_folder_
             # find prompt text intervals, starting at the first word
             if ('text =' in file[line]) and ('name =' not in file[line-7]):
                 prompt = re.findall('"([^"]*)"', file[line])[0]
-                if prompt != "":  # ignore empty prompt intervals
+                # ignore empty prompt intervals
+                if prompt != "":
                     # store prompt start and end times
                     xmin_prompt = round(float(re.findall("\d+\.?\d*", file[line-2])[0]), 4)
                     xmax_prompt = round(float(re.findall("\d+\.?\d*", file[line-1])[0]), 4)
@@ -167,19 +168,21 @@ def split_save_stories(textgrid_list, wav_folder, second_wav_folder, wav_folder_
                                 # store word end time with 2 decimals for later end-of-prompt check
                                 xmax_split = format(xmax, '.2f')
 
+                                # store current word in transcript
+                                transcript.append(word)
                                 # check if end of word time = end of prompt time
                                 if xmax_split == xmax_prompt_split:
                                     for word in transcript:
                                         if word != "":  # ignore empty strings
                                             # add word to transcript
                                             transcript_text += word + ' '
-
                                     # write transcript string to file
                                     with open(f"{ort_folder}{basename}_1_{str(number).zfill(3)}.ort", 'w', encoding='utf-8') as transcript_file:
                                         transcript_file.write(transcript_text)
 
-                                    # reset transcript and segment counter
+                                    # reset transcript, transcript string and segment counter
                                     transcript_text = ""
+                                    transcript = []
                                     number += 1
 
         # iterate over manual transcriptions again but this time post prompts for 2nd stories
