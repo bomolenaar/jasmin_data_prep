@@ -37,6 +37,10 @@ prompt_folder = os.path.join(main_folder, 'prompts/')
 ort_folder = os.path.join(main_folder, 'manual_transcriptions/')
 second_ort_folder = os.path.join(second_folder, 'manual_transcriptions/')
 
+adapt_dir = os.path.join(main_folder, 'adapt/')
+adapt_orts = os.path.join(main_folder, 'adapt/', 'manual_transcriptions/')
+adapt_prompts = os.path.join(main_folder, 'adapt/', 'prompts/')
+
 
 ### Directory management ###
 # remove old main_folder and second_folder and create new ones
@@ -61,7 +65,8 @@ with open(recordings,'r', encoding='utf-8') as f_in, open(selected_recordings,'w
 
 ### Directory management 2 ###
 # create folders if not exist, remove folders if exist
-folder_lst = [prompt_folder, ort_folder, wav_folder, second_wav_folder, wav_folder_untrimmed, second_ort_folder]
+folder_lst = [prompt_folder, ort_folder, wav_folder, second_wav_folder, wav_folder_untrimmed, second_ort_folder,
+              adapt_dir, adapt_orts, adapt_prompts]
 for folder in folder_lst:
     if os.path.isdir(folder):
         filelist = [f for f in os.listdir(folder)]
@@ -248,6 +253,8 @@ split_save_stories(tg_file_lst, wav_folder, second_wav_folder, wav_folder_untrim
 
 # normalise manual transcriptions, prompts for G1-1 and G1-2
 print("String normalisation...")
+os.system(f'python3 string_norm.py {ort_folder} {adapt_orts} -u False')
 os.system(f'python3 string_norm.py {ort_folder} {ort_folder}')
+os.system(f'python3 string_norm.py {prompt_folder} {adapt_prompts} -u False')
 os.system(f'python3 string_norm.py {prompt_folder} {prompt_folder}')
 os.system(f'python3 string_norm.py {second_ort_folder} {second_ort_folder}')
