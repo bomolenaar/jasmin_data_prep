@@ -13,9 +13,9 @@ collection = sys.argv[1]
 myfolder = sys.argv[2]
 
 ## DIRECTORIES all of them ending with / ##
-# output data dir, e.g.; "/vol/tensusers3/nvhelleman/jasmin/data/"
+# output data dir, e.g.; "/vol/tensusers4/bmolenaar/jasmin_data_prep/A3_jasmin_G1/data/"
 filedir = os.path.join(myfolder, collection, "data/")
-# wav (test) files to use dir, e.g.; "/vol/tensusers3/nvhelleman/jasmin/20220210/wav_files_to_use/"
+# wav (test) files to use dir, e.g.; "/vol/tensusers4/bmolenaar/jasmin_data_prep/A3_jasmin_G1/wav_files_to_use_test/"
 test_set = os.path.join(myfolder, collection, 'wav_files_to_use_test/')
 # wav (train)
 train_set = os.path.join(myfolder, collection, 'wav_files_to_use_train/')

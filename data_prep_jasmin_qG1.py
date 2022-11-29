@@ -11,17 +11,20 @@ if (len(sys.argv) < 4):
 subset1 = sys.argv[1]
 subset2 = sys.argv[2]
 myfolder = sys.argv[3]
+
 ## DIRECTORIES all of them ending with / ##
-# output data dir, e.g.; "/vol/tensusers3/nvhelleman/jasmin/data/"
+# output data dir, e.g.; "/vol/tensusers4/bmolenaar/jasmin_data_prep/A3_jasmin_G1/data/"
+
 filedir1 = os.path.join(myfolder, subset1, 'data/')
 filedir2 = os.path.join(myfolder, subset2, 'data/')
-original = os.path.join(myfolder, subset2, 'manual_transcriptions/')
+
+G2_ort = os.path.join(myfolder, subset2, 'manual_transcriptions/')
 G1_ort = os.path.join(myfolder, subset1, 'manual_transcriptions/')
-G1_prompts = os.path.join(myfolder, subset1, 'prompts/')
-# wav (test) files to use dir, e.g.; "/vol/tensusers3/nvhelleman/jasmin/20220210/wav_files_to_use/"
-test_set = os.path.join(myfolder, subset1, 'wav_files_to_use_test/')
+
+# wav (test) files to use dir, e.g.; "/vol/tensusers4/bmolenaar/jasmin_data_prep/A3_jasmin_G1/wav_files_to_use/"
+test_set = os.path.join(myfolder, subset1, 'wav_files_to_use/')
 # wav (train)
-train_set = os.path.join(myfolder, subset2, 'wav_files_to_use_train/')
+train_set = os.path.join(myfolder, subset2, 'wav_files_to_use/')
 # rec to use file
 rec = os.path.join(myfolder, subset1, 'rec_to_use.txt')
 
@@ -52,7 +55,7 @@ def text(filenames, filedir):
 
 
 with open(filedir2+TRAIN_PATH+'text', 'w', encoding='utf-8') as train_text, open(filedir1+TEST_PATH+'text', 'w', encoding='utf-8') as test_text:
-    train_text.write(text(train, original)+ '\n')
+    train_text.write(text(train, G2_ort)+ '\n')
     test_text.write(text(test, G1_ort)+ '\n')
 
 
@@ -103,6 +106,7 @@ def segments(filenames):
     results = []
     for name in filenames:
         basename = name.split('.')[0]
+        original = ''
         file = open(original + basename + '.ort')
         begin = ""
         end = ""

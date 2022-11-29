@@ -37,9 +37,9 @@ prompt_folder = os.path.join(main_folder, 'prompts/')
 ort_folder = os.path.join(main_folder, 'manual_transcriptions/')
 second_ort_folder = os.path.join(second_folder, 'manual_transcriptions/')
 
-adapt_dir = os.path.join(main_folder, 'adapt/')
-adapt_orts = os.path.join(main_folder, 'adapt/', 'manual_transcriptions/')
-adapt_prompts = os.path.join(main_folder, 'adapt/', 'prompts/')
+# adapt_dir = os.path.join(main_folder, 'adapt/')
+# adapt_orts = os.path.join(main_folder, 'adapt/', 'manual_transcriptions/')
+# adapt_prompts = os.path.join(main_folder, 'adapt/', 'prompts/')
 
 
 ### Directory management ###
@@ -65,8 +65,9 @@ with open(recordings,'r', encoding='utf-8') as f_in, open(selected_recordings,'w
 
 ### Directory management 2 ###
 # create folders if not exist, remove folders if exist
-folder_lst = [prompt_folder, ort_folder, wav_folder, second_wav_folder, wav_folder_untrimmed, second_ort_folder,
-              adapt_dir, adapt_orts, adapt_prompts]
+folder_lst = [prompt_folder, ort_folder, wav_folder, second_wav_folder, wav_folder_untrimmed, second_ort_folder
+              # adapt_dir, adapt_orts, adapt_prompts
+              ]
 for folder in folder_lst:
     if os.path.isdir(folder):
         filelist = [f for f in os.listdir(folder)]
@@ -166,12 +167,12 @@ def split_save_stories(textgrid_list, wav_folder, second_wav_folder, wav_folder_
                             xmin = round(float(re.findall("\d+\.?\d*", file[line])[0]), 4)
                             xmax = round(float(re.findall("\d+\.?\d*", file[line+1])[0]), 4)
 
+                            # store word end time with 2 decimals for later end-of-prompt check
+                            xmax_split = format(xmax, '.2f')
+
                             # check if current transcript word is within prompt timeframe
                             if (xmin >= xmin_prompt) and (xmax <= xmax_prompt):
                                 word = re.findall('"([^"]*)"', file[line+2])[0]
-
-                                # store word end time with 2 decimals for later end-of-prompt check
-                                xmax_split = format(xmax, '.2f')
 
                                 # store current word in transcript
                                 transcript.append(word)
@@ -189,7 +190,7 @@ def split_save_stories(textgrid_list, wav_folder, second_wav_folder, wav_folder_
                                     transcript_text = ""
                                     transcript = []
                                     number += 1
-
+                    # print()
         # iterate over manual transcriptions again but this time post prompts for 2nd stories
         number = 1  # reset segment counter
         for line in range(transcripts_start, transcripts_end):
@@ -237,7 +238,7 @@ def split_save_stories(textgrid_list, wav_folder, second_wav_folder, wav_folder_
         os.system(f"mv {wav_folder}{basename}.wav {wav_folder_untrimmed}{basename}.wav")
 
     # print number of segments merged based on delta
-    print(f"'...' deltas skipped: {delta_skipped}")
+    # print(f"'...' deltas skipped: {delta_skipped}")
 
 
 print('wav_file_lst',len(wav_file_lst))
@@ -253,8 +254,9 @@ split_save_stories(tg_file_lst, wav_folder, second_wav_folder, wav_folder_untrim
 
 # normalise manual transcriptions, prompts for G1-1 and G1-2
 print("String normalisation...")
-os.system(f'python3 string_norm.py {ort_folder} {adapt_orts} -u False')
 os.system(f'python3 string_norm.py {ort_folder} {ort_folder}')
-os.system(f'python3 string_norm.py {prompt_folder} {adapt_prompts} -u False')
 os.system(f'python3 string_norm.py {prompt_folder} {prompt_folder}')
 os.system(f'python3 string_norm.py {second_ort_folder} {second_ort_folder}')
+
+# os.system(f'python3 string_norm.py {prompt_folder} {adapt_prompts} -u False')
+# os.system(f'python3 string_norm.py {ort_folder} {adapt_orts} -u False')
