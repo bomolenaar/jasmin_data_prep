@@ -3,10 +3,8 @@
 
 import re
 import os
-import glob
 import sys
 import shutil
-import math
 from pathlib import Path
 
 if (len(sys.argv) < 4):

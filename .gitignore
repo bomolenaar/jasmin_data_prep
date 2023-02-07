@@ -3,3 +3,16 @@
 
 # Ada Library Information
 *.ali
+A3_jasmin_G1/
+*/.*_unfiltered
+*/.wav_files_untrimmed
+*/*_files_to_use*
+*/tier*
+*/manual_transcriptions
+*/prompts
+*/data
+*/rec_to_use.txt
+utils
+dicts_prep_call.txt
+A3_jasmin_G1_test.txt
+dicts_prep.py
