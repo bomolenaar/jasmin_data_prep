@@ -3,7 +3,6 @@
 
 import re
 import os
-import glob
 import sys
 import shutil
 from pathlib import Path

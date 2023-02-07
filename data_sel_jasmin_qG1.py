@@ -126,6 +126,8 @@ def split_save_stories(textgrid_list, wav_folder, second_wav_folder, wav_folder_
                         'ggg', 'ggg.', '!ggg.', 'xxx', 'xxx.', '!xxx',
                         'uh', 'uh.', 'uh..', 'uh...', 'uhm', 'uhm.', 'uhm..', 'uhm...'}
 
+        # Initiate these variables
+        transcripts_start = 0; transcripts_end = 0; prompts_start = 0; prompts_end = 0
         # Iterate over lines in .TextGrid file to determine location of transcript and prompt tiers
         for line in range(len(file)):
             if 'item [1]' in file[line]:
