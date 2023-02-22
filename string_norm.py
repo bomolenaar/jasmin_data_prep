@@ -10,16 +10,19 @@ import getopt
 @Author:        Bo Molenaar
 @Date:          3 June 2022
 
-@Lastedited:    10 June 2022
+@Lastedited:    22 February 2023
 
 This script performs text_filter.py for a given input folder and stores filtered output to given output folder.
 Optionally you can select to use text_filter_no-unk.py with opt -u False or --unk=False
+
+Expected input: 1) folder to read files from, 2) folder to place output, 3) extension of files to read, 4) optional -u or --unk flag
 """
 
 unk = True
 infolder = sys.argv[1]
 outfolder = sys.argv[2]
-argv = sys.argv[3:]
+filetype = sys.argv[3]
+argv = sys.argv[4:]
 
 try:
     opts, args = getopt.getopt(argv, "u:", ["unk="])
@@ -43,7 +46,7 @@ def string_norm(infolder, outfolder, use_unk):
     file_lst = []
     for dirpath, dirnames, filenames in os.walk(infolder):
         for file in filenames:
-            if '.ort' or '.prompt' or '.awd' in file:
+            if filetype in file:
                 file_lst.append(file)
 
     # make a temp dir to put the text filter output if infolder name = outfolder name
@@ -81,7 +84,7 @@ def string_norm(infolder, outfolder, use_unk):
 
         # run the filter for each file in indir
         for file in file_lst:
-            os.system(f"python3 {textfilter_path} {infolder}{file} {outfolder}{file}")
+            os.system(f"python3 {textfilter_path} {os.path.join(infolder, file)} {os.path.join(outfolder, file)}")
 
 
 string_norm(infolder, outfolder, unk)
