@@ -58,7 +58,7 @@ def clean_word(m_word):
     else:
         for character in m_word:
             if character.isdigit():
-                print(f"{input_file.rsplit('/', 1)[1]}\t{m_word}")
+                # print(f"{input_file.rsplit('/', 1)[1]}\t{m_word}")
                 m_word = m_word[:m_word.index(character)] + map_digits(character) + m_word[m_word.index(character)+1:]
     return m_word.lower()
 
