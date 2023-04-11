@@ -18,7 +18,7 @@ TEXT_SEPARATOR = ' '
 REPLACE_SYMBOLS = {'.': '', '?': '', '!': '', 'SIL': '', ',': '', '=': '-', "’": "'", '-': ''}  # +lowercase
 REPLACE_WORDS = {'xxx': '<unk>', 'ggg': '<unk>'}
 # DELETE_ONLY_BEGIN_END = ["-"]  # We want to keep "\'" 's 't
-TEMPORAL_FILE = "tmp"
+TEMPORAL_FILE = f"{input_file}_tmp"
 
 
 def map_digits(digits):
@@ -58,8 +58,8 @@ def clean_word(m_word):
     else:
         for character in m_word:
             if character.isdigit():
-                # print(m_word)
-                m_word = m_word[:m_word.index(character)] + map_digits(character)
+                print(f"{input_file.rsplit('/', 1)[1]}\t{m_word}")
+                m_word = m_word[:m_word.index(character)] + map_digits(character) + m_word[m_word.index(character)+1:]
     return m_word.lower()
 
 
@@ -83,26 +83,32 @@ def remove_accents_from_lower(raw_text):
 
 filtered_lines = []
 set_symbols = set()
-with open(input_file, 'r', encoding='utf-8') as input_text:
-    for line in input_text:
-        line = line.strip()
-        fields = line.split(TEXT_SEPARATOR)
-        # id=fields[0]
-        utt = fields[0:]
-        filtered_utt = []
-        for word in utt:
-            m_word = remove_accents_from_lower(clean_word(word))
-            for i in m_word:
-                set_symbols.add(i)
-            filtered_utt.append(m_word)
-        filtered_lines.append(' '.join(filtered_utt))
 
-# for symbol in sorted(set_symbols):
-#     print(symbol,end=' ')
-# print()
+if os.stat(input_file).st_size == 0:
+    with open(output_file, 'w', encoding='utf-8') as output_text:
+        output_text.write('')
 
-with open(output_file, 'w', encoding='utf-8') as output_text:
-    output_text.write('\n'.join(filtered_lines) + '\n')
+else:
+    with open(input_file, 'r', encoding='utf-8') as input_text:
+        for line in input_text:
+            line = line.strip()
+            fields = line.split(TEXT_SEPARATOR)
+            # id=fields[0]
+            utt = fields[0:]
+            filtered_utt = []
+            for word in utt:
+                m_word = remove_accents_from_lower(clean_word(word))
+                for i in m_word:
+                    set_symbols.add(i)
+                filtered_utt.append(m_word)
+            filtered_lines.append(' '.join(filtered_utt))
+
+    # for symbol in sorted(set_symbols):
+    #     print(symbol,end=' ')
+    # print()
+
+    with open(output_file, 'w', encoding='utf-8') as output_text:
+        output_text.write('\n'.join(filtered_lines) + '\n')
 
 if os.path.exists(TEMPORAL_FILE):
     os.remove(TEMPORAL_FILE)
