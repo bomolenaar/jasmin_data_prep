@@ -1,3 +1,17 @@
+""""
+@Author:        Bo Molenaar
+@Date:          3 June 2022
+
+@Lastedited:    16 March 2023
+
+This script performs text_filter.py for a given input folder 
+and stores filtered output to given output folder.
+Optionally you can select to use text_filter_no-unk.py with opt -u False or --unk=False
+
+Expected input: 1) folder to read files from, 2) folder to place output, 
+3) extension of files to read, 4) optional -u or --unk flag
+"""
+
 #!usr/bin/python3
 # -*- coding: utf-8 -*-
 
@@ -5,18 +19,7 @@ import os
 import sys
 import shutil
 import getopt
-
-""""
-@Author:        Bo Molenaar
-@Date:          3 June 2022
-
-@Lastedited:    22 February 2023
-
-This script performs text_filter.py for a given input folder and stores filtered output to given output folder.
-Optionally you can select to use text_filter_no-unk.py with opt -u False or --unk=False
-
-Expected input: 1) folder to read files from, 2) folder to place output, 3) extension of files to read, 4) optional -u or --unk flag
-"""
+import ast
 
 unk = True
 infolder = sys.argv[1]
@@ -32,7 +35,7 @@ except getopt.GetoptError as err:
 
 for opt, arg in opts:
     if opt in ["-u", "--unk"]:
-        unk = eval(arg)
+        unk = ast.literal_eval(unk)
 
 
 def string_norm(infolder, outfolder, use_unk):
@@ -46,23 +49,27 @@ def string_norm(infolder, outfolder, use_unk):
     file_lst = []
     for dirpath, dirnames, filenames in os.walk(infolder):
         for file in filenames:
-            if filetype in file:
+            if (filetype in file) and ('_tmp' not in file):
                 file_lst.append(file)
 
     # make a temp dir to put the text filter output if infolder name = outfolder name
     if infolder == outfolder:
-        outfolder = outfolder[:-1] + '_filtered/'
+        if outfolder.endswith('/'):
+            outfolder = outfolder[:-1] + '_filtered/'
+        else:
+            outfolder = outfolder + '_filtered/'
 
         if os.path.isdir(outfolder):
             shutil.rmtree(outfolder)
         os.mkdir(outfolder)
 
         # handle archiving of original files > indir_unfiltered
-        if infolder.split('/')[1] != "":
-            infolder_fields = infolder.split('/')
-            infolder_archive = "/".join(infolder_fields[:-2]) + "/." + infolder_fields[-2] + "_unfiltered"
-        elif infolder.split("/")[1] == "":
-            infolder_archive = '.' + infolder[:-1] + '_unfiltered/'
+        infolder_archive = ""
+        infolder_fields = infolder.split('/')
+        if infolder_fields[-1] != "":
+            infolder_archive = "/".join(infolder_fields[:-1]) + "/." + infolder_fields[-1] + "_unfiltered"
+        else:
+            infolder_archive = "/".join(infolder_fields[:-3]) + "/." + infolder_fields[-2] + "_unfiltered"
 
         # start with a clean indir archive
         if os.path.isdir(infolder_archive):
