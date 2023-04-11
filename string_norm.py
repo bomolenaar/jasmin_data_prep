@@ -49,8 +49,9 @@ def string_norm(infolder, outfolder, use_unk):
     file_lst = []
     for dirpath, dirnames, filenames in os.walk(infolder):
         for file in filenames:
-            if (filetype in file) and ('_tmp' not in file):
+            if (filetype in file) and ('_tmp' not in file) and ('README' not in file):
                 file_lst.append(file)
+    print(f"Normalising {len(file_lst)} {filetype} files...")
 
     # make a temp dir to put the text filter output if infolder name = outfolder name
     if infolder == outfolder:
@@ -69,20 +70,24 @@ def string_norm(infolder, outfolder, use_unk):
         if infolder_fields[-1] != "":
             infolder_archive = "/".join(infolder_fields[:-1]) + "/." + infolder_fields[-1] + "_unfiltered"
         else:
-            infolder_archive = "/".join(infolder_fields[:-3]) + "/." + infolder_fields[-2] + "_unfiltered"
+            infolder_archive = "/".join(infolder_fields[:-2]) + "/." + infolder_fields[-2] + "_unfiltered"
 
         # start with a clean indir archive
         if os.path.isdir(infolder_archive):
             shutil.rmtree(infolder_archive)
-        os.mkdir(infolder_archive)
 
         # run the filter for each file in indir
         for file in file_lst:
             os.system(f"python3 {textfilter_path} {infolder}{file} {outfolder}{file}")
 
+        print("Done.\nMoving files...")
+
         # make outdir name = indir name
         os.system(f"mv {infolder} {infolder_archive}")
         os.system(f"mv {outfolder} {infolder}")
+
+        print(f"Done.\nNormalised files are in {infolder}."
+              f"\nOriginal files are in {infolder_archive}")
 
     else:
         if os.path.isdir(outfolder):
@@ -92,6 +97,8 @@ def string_norm(infolder, outfolder, use_unk):
         # run the filter for each file in indir
         for file in file_lst:
             os.system(f"python3 {textfilter_path} {os.path.join(infolder, file)} {os.path.join(outfolder, file)}")
+
+        print(f"Done.\nNormalised files are in {outfolder}.")
 
 
 string_norm(infolder, outfolder, unk)
